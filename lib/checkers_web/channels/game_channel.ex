@@ -75,11 +75,11 @@ defmodule CheckersWeb.GameChannel do
             player2 = Player.playerName(state.player2)
             if(state.winner == player1) do
                 broadcast! socket, "redWinner", %{winner:
-                                  player1, loser: player2}
+                                  player1, loser: player2, end: false}
             end
             if(state.winner == player2) do
                 broadcast! socket, "blackWinner", %{winner:
-                                    player2, loser: player1}
+                                    player2, loser: player1, end: false}
             end
             {:reply, {:ok, %{}}, socket}
         end
@@ -131,7 +131,8 @@ defmodule CheckersWeb.GameChannel do
                                             ""
                                         end
                                     end
-                                    curstate = %{"player" => player , "player1"=> player1, "player2"=>player2, "red" => red, "all" => state.all, "gameStarted" => state.isGameStarted, "next" => next, "gameEnded" => state.isGameEnded, "black" => black}
+      
+                                    curstate = %{"player" => player , "player1"=> player1, "chat" => state.messages, "player2"=>player2, "red" => red, "all" => state.all, "gameStarted" => state.isGameStarted, "next" => next, "gameEnded" => state.isGameEnded, "player1Score" => state.player1Score, "player2Score" => state.player2Score, "black" => black}
                                     broadcast! socket, "new_spectator", %{message:
                                     curstate}
                                     {:reply,  {:ok, curstate}, socket}
@@ -184,10 +185,17 @@ defmodule CheckersWeb.GameChannel do
                     x
                 end)
                 player2  = Player.playerName(state.player2)
+                player1 = Player.playerName(state.player1)
                 #get King Info
                 curState = %{"player"=> curPlayer, "player2" => player2, "player1Score" => state.player1Score, "player2Score" => state.player2Score, "red" => red, "all" => state.all, "black" => black, "kings" => state.kingmap}
-                  broadcast! socket, "moved_Red", %{message:
-                        curState}
+                if(length(black) == 0) do
+                    Game.setWinner({:global, gameName}, player1)
+                    broadcast! socket, "redWinner", %{winner:
+                    player1, loser: player2, end: true}
+                else 
+                    broadcast! socket, "moved_Red", %{message:
+                      curState}
+                end
                     {:reply,{:ok, curState}, socket}
                     :error->
                         {:reply, :error, socket}
@@ -214,14 +222,21 @@ defmodule CheckersWeb.GameChannel do
                   x
               end)
               player1 = Player.playerName(state.player1)
+              player2 = Player.playerName(state.player2)
               #king info added
               
                 curState = %{"player" => curPlayer, "player1" => player1, "player1Score" => state.player1Score, "player2Score" => state.player2Score, "red" => red, "all" => state.all, "black" => black, "kings" => state.blackKing }
                 if(length(red) == 0) do
-                    
-                end
-                broadcast! socket, "moved_black", %{message:
+                    IO.puts("entered")
+                    Game.setWinner({:global, gameName}, player2)
+                    broadcast! socket, "blackWinner", %{winner:
+                    player2, loser: player1, end: true}
+                else 
+                    broadcast! socket, "moved_black", %{message:
                       curState}
+                end
+                #broadcast! socket, "moved_black", %{message:
+                 #     curState}
                   {:reply,{:ok, curState}, socket}
                 :error -> 
                     {:reply, :error, socket}

@@ -23,6 +23,7 @@ defmodule CheckersWeb.Game.PieceList do
     end
     def createBlackPositions(pid, boardpid) do
         blackPoses =  [41,43,45,47,50,52,54,56,57,59,61,63]
+        #blackPoses =  [41]
         newList = Enum.map(blackPoses, fn x -> 
             boardPosition = String.to_atom("#{x}")
             square = Board.getSquare(boardpid, boardPosition)

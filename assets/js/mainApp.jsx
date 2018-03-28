@@ -45,16 +45,12 @@ componentDidMount() {
       })
 
       this.state.channel.on("player1_added", response => {
-          console.log(response.message)
-          console.log(response.message.red)
         this.setState({redPositions: response.message.red,
         allPositions: response.message.all,
         player1: response.message.player,
         chat: true})
       })
       this.state.channel.on("player2_added", response => {
-        console.log(response.message)
-        console.log(response.message.black)
         this.setState({player2: response.message.player, player1: response.message.player1})
       if(response.message.player!= this.state.player) {
       this.setState({blackPositions: response.message.black,
@@ -62,7 +58,8 @@ componentDidMount() {
                     allPositions: response.message.all,
                     message: response.message.message,
                     chatmessages: response.message.chat,
-                chat:true})
+                chat:true
+            })
       } else {
         this.setState({blackPositions: response.message.black,
             redPositions: response.message.red,
@@ -78,9 +75,6 @@ componentDidMount() {
     this.state.channel.on("new_message", response => {
         this.setState({chatMessages: response.chatmessages})
     })
-    this.state.channel.on("subscribers", response => {
-        console.log("These players have joined: ", response)
-        })
     this.state.channel.on("moved_Red", response => {
             this.setState({blackPositions: response.message.black,
             redPositions: response.message.red,
@@ -92,7 +86,7 @@ componentDidMount() {
         })
         
     if(response.message.player!= this.state.player)  {
-        this.setState({message: response.message.player + "has played your turn"})
+        this.setState({message: response.message.player + " has played your turn"})
     }
     else {
         this.setState({message: response.message.player2 + "'s turn"})
@@ -135,11 +129,13 @@ componentDidMount() {
                 allPositions: response.message.all,
                 player1: response.message.player1,
                 player2: response.message.player2,
-                chatMessages: [],
+                chatMessages: response.message.chat,
                 gameEnded: this.state.gameEnded,
                 winner: this.state.winner,
                 loser: this.state.loser,
-                next: response.message.next
+                next: response.message.next,
+                player1Score: response.message.player1Score,
+                player2Score: response.message.player2Score
             })
             if(response.message.next =="red") {
                 this.setState({message: response.message.player1 + "'s turn"})
@@ -153,7 +149,15 @@ componentDidMount() {
 
     this.state.channel.on("blackWinner", response=> {
         if(response.winner == this.state.player)  {
-            this.setState({message: response.loser + " has given up! You won :D",
+            let message =""
+            if(response.end) {
+                message = response.loser + " lost, You won :D"
+            }
+            else {
+                message = response.loser + " has given up! You won :D"
+            }
+           
+            this.setState({message: message,
         gameEnded: true,
         winner: response.winner,
         loser:  response.loser} )
@@ -172,15 +176,20 @@ componentDidMount() {
             loser:  response.loser})
         }
 
-    })
+})
     this.state.channel.on("redWinner", response=> {
         if(response.winner == this.state.player)  {
-            console.log(response.loser)
-            this.setState({message: response.loser + " has given up! you won"})
+            let message =""
+            if(response.end) {
+                message = response.loser + " lost, You won :D"
+            }
+            else {
+                message = response.loser + " has given up! You won :D"
+            }
+           
+            this.setState({message: message})
         }
         else if(response.loser == this.state.player)  {
-            console.log("in loser section")
-            console.log(response.loser)
             this.setState({message: response.winner + " won!, you lose"})
         }
         else {
@@ -197,7 +206,7 @@ componentDidUpdate() {
 }
 
 gotView(view) {
-    console.log("entered inside")
+   
     this.setState(view.curState)
 }
 processPlayerAdded() {
@@ -245,7 +254,7 @@ legalMove(column_position){
                 }
             }
         } else {
-            console.log("illegal move");
+           alert("illegal move");
             this.setState({
                 currentChecker:{
                     selectedchecker:0,
@@ -279,17 +288,17 @@ giveUp() {
 
 render(){
 let chatList = this.state.chatMessages
-console.log(this.state.chatMessages)
+
 let liList = chatList.map((x) =>
             <li className="list-group-item">{x}</li>)
 let chatEnabled = this.state.chat
 return(
-<div class="someDiv">
-<div class="row">
+<div className="someDiv">
+<div className="row">
 <Stuff value = {this.state.message} />
 </div>
-<div class="row">
-<div class="col-sm-6">
+<div className="row">
+<div className="col-sm-6">
 <Board red={this.state.redPositions} 
     all={this.state.allPositions} 
     black={this.state.blackPositions} 
@@ -299,14 +308,14 @@ return(
     channel = {this.state.channel}
     player = {this.state.player}
     currentChecker = {this.state.currentChecker}
-    kingList = {this.state.kingList}
+    kinglist = {this.state.kingList}
     blackKing = {this.state.blackKing}/>
 </div>
-<div class="col-sm-3">
+<div className="col-sm-3">
 <Score player1 = {this.state.player1} player2= {this.state.player2} red={this.state.player1Score} black = {this.state.player2Score} />
-<Button value = "giveUp"  onClick = {this.giveUp}>Give Up!</Button>
+<Button value = "giveUp"  onClick = {this.giveUp} disabled={!this.state.chat}>Give Up!</Button>
 </div>
-<div class="col-sm-3">
+<div className="col-sm-3">
 <h3>Chat</h3>
 <div id="chatArea">
             <ul className="list-group">
@@ -332,24 +341,26 @@ function Score(props) {
     
     return(
        
-        <div class="score">
+        <div className="score">
          <center><h6>ScoreBoard</h6></center>
-        <table>
-            <tr>
-                <td class="name">
+        <table width="100%">
+        <tbody>
+            <tr width="100%">
+                <td className="name" width="50%">
                     {props.player1}
                     </td>
-                    <td>
-        <div class="redScore circle">{props.red}</div> <br /> </td>
+                    <td width="50%">
+        <div className="redScore circlescore">{props.red}</div> <br /> </td>
         </tr>
         <tr>
-        <td class="name">
+        <td className="name" width="50%">
                     {props.player2}
                     </td>
-                    <td>
-        <div class="blackScore circle">{props.black}</div>
+                    <td width="50%">
+        <div className="blackScore circlescore">{props.black}</div>
         </td>
         </tr>
+        </tbody>
         </table>
         </div>
     )
